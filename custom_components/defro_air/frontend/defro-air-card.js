@@ -17,6 +17,7 @@ const PARTY_MAX = 720;
 const PARTY_STEP = 15;
 const HOLIDAY_MAX = 60;
 const FIREPLACE_SECONDS = 180;
+const FAN_ICON_RATIO = 0.07;
 
 const STYLE = `
   :host { display: block; }
@@ -45,14 +46,14 @@ const STYLE = `
   .btn {
     width: var(--btn, 54px); height: var(--btn, 54px); flex: none;
     border-radius: 50%; border: 0; cursor: pointer; padding: 0;
-    background: #fff; color: #111; --mdc-icon-size: calc(var(--btn, 54px) * .56);
+    background: #fff; color: #111; --mdc-icon-size: calc(var(--btn, 54px) * .62);
     display: inline-flex; align-items: center; justify-content: center;
   }
   .spacer { flex: 1; }
   .btn.on { background: #ffb300; }
   .btn.open { outline: 3px solid ${BLUE}; }
   .btn[disabled] { opacity: .35; cursor: default; }
-  .digit { font-size: calc(var(--btn, 54px) * .46); font-weight: 600; line-height: 1; }
+  .digit { font-size: calc(var(--btn, 54px) * .52); font-weight: 600; line-height: 1; }
   .sep { width: 1px; align-self: stretch; margin: 4px 2px 22px; background: #555; }
   .cap { font-size: .85em; color: #ddd; min-height: 1.2em; white-space: nowrap; }
   .eff { text-align: center; white-space: nowrap; line-height: 1.15; }
@@ -141,7 +142,10 @@ class DefroAirCard extends HTMLElement {
     // Kreski: zawsze przed urlopem, a przy wyborze biegu także przed „stop”.
     const separators = (this._hasGears ? 2 : 1) * (gap + 5);
     const available = width - 32 - separators - gap * count; // count: odstępy + rozpórka
-    const size = Math.max(26, Math.min(54, Math.floor(available / count)));
+    // Przyciski mają średnicę ikony wiatraka ze schematu (70 z 1000 jednostek
+    // szerokości rysunku), chyba że w rzędzie jest na to za ciasno.
+    const fan = Math.round(width * FAN_ICON_RATIO);
+    const size = Math.max(22, Math.min(fan, Math.floor(available / count)));
     this.style.setProperty("--btn", `${size}px`);
     this.style.setProperty("--gap", `${gap}px`);
   }
