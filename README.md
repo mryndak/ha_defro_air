@@ -58,8 +58,11 @@ Co pokazuje i czym steruje:
 - sprawność odzysku i odzyskiwana moc,
 - wybór biegu 0–3, jeśli program sterownika udostępnia rejestr 157.
 
-Po aktualizacji integracji odśwież przeglądarkę (Ctrl+F5), żeby załadować
-nową wersję karty.
+Integracja sama dodaje kartę do zasobów dashboardu (Ustawienia → Dashboardy →
+Zasoby) i aktualizuje jej adres przy zmianie wersji, więc wystarczy ponownie
+otworzyć dashboard. Jeśli zasoby dashboardu są trzymane w YAML-u, karta ładuje
+się ze stroną startową i po instalacji lub aktualizacji trzeba odświeżyć
+przeglądarkę (Ctrl+F5).
 
 ## Encje
 

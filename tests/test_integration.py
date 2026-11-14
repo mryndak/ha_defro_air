@@ -19,7 +19,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.helpers import entity_registry as er
+from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 
 from custom_components.defro_air.const import DOMAIN
@@ -340,9 +342,7 @@ async def test_dashboard_card_is_served(
     entry: MockConfigEntry,
     hass_client,
 ) -> None:
-    """Integracja udostępnia kartę dashboardu i ładuje ją we frontendzie."""
-    from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
-
+    """Integracja serwuje kartę i dodaje ją do zasobów dashboardu."""
     await setup(hass, entry)
 
     client = await hass_client()
@@ -351,13 +351,60 @@ async def test_dashboard_card_is_served(
     body = await response.text()
     assert 'customElements.define("defro-air-card"' in body
 
-    urls = hass.data[DATA_EXTRA_MODULE_URL].urls
-    assert [u for u in urls if u.startswith("/defro_air/defro-air-card.js?v=")]
+    version = (await async_get_integration(hass, DOMAIN)).version
+    assert await _card_resources(hass) == [
+        {"type": "module", "url": f"/defro_air/defro-air-card.js?v={version}"}
+    ]
 
-    # Przeładowanie wpisu nie rejestruje karty drugi raz.
+    # Przeładowanie wpisu nie dodaje zasobu drugi raz.
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
-    assert len([u for u in hass.data[DATA_EXTRA_MODULE_URL].urls if "defro-air-card" in u]) == 1
+    assert len(await _card_resources(hass)) == 1
+
+
+async def test_card_resource_follows_version(
+    hass: HomeAssistant, old_unit: MockModbusUnit, entry: MockConfigEntry
+) -> None:
+    """Zasób ze starą wersją w adresie jest podmieniany, a nie dublowany."""
+    from homeassistant.setup import async_setup_component
+
+    assert await async_setup_component(hass, "lovelace", {})
+    resources = hass.data[LOVELACE_DATA].resources
+    await resources.async_create_item(
+        {"res_type": "module", "url": "/defro_air/defro-air-card.js?v=0.0.1"}
+    )
+    await resources.async_create_item({"res_type": "module", "url": "/local/other.js"})
+
+    await setup(hass, entry)
+
+    version = (await async_get_integration(hass, DOMAIN)).version
+    assert await _card_resources(hass) == [
+        {"type": "module", "url": f"/defro_air/defro-air-card.js?v={version}"}
+    ]
+    # Cudze zasoby zostają nietknięte.
+    assert any(item["url"] == "/local/other.js" for item in resources.async_items())
+
+
+async def test_card_resource_is_removed_with_last_entry(
+    hass: HomeAssistant, old_unit: MockModbusUnit, entry: MockConfigEntry
+) -> None:
+    await setup(hass, entry)
+    assert len(await _card_resources(hass)) == 1
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await _card_resources(hass) == []
+
+
+async def _card_resources(hass: HomeAssistant) -> list[dict]:
+    resources = hass.data[LOVELACE_DATA].resources
+    await resources.async_get_info()
+    return [
+        {"type": item["type"], "url": item["url"]}
+        for item in resources.async_items()
+        if "defro-air-card" in item["url"]
+    ]
 
 
 def test_card_uses_existing_entity_keys() -> None:

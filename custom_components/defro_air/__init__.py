@@ -8,6 +8,8 @@ from modbus_connection import ModbusTcpParams
 
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
+from homeassistant.components.lovelace.const import LOVELACE_DATA, MODE_STORAGE
+from homeassistant.components.lovelace.resources import ResourceStorageCollection
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
@@ -42,7 +44,53 @@ async def _async_register_card(hass: HomeAssistant) -> None:
     )
     integration = await async_get_integration(hass, DOMAIN)
     # Wersja w adresie wymusza pobranie nowego pliku po aktualizacji integracji.
-    add_extra_js_url(hass, f"{CARD_URL}?v={integration.version}")
+    url = f"{CARD_URL}?v={integration.version}"
+    if not await _async_register_resource(hass, url):
+        # Zasoby dashboardu trzymane w YAML-u: nie możemy ich zmieniać, więc
+        # ładujemy kartę ze stroną startową (wymaga odświeżenia przeglądarki).
+        add_extra_js_url(hass, url)
+
+
+def _storage_resources(hass: HomeAssistant) -> ResourceStorageCollection | None:
+    """Zasoby dashboardu, jeśli są zarządzane z interfejsu (a nie w YAML-u)."""
+    lovelace = hass.data.get(LOVELACE_DATA)
+    if lovelace is None or lovelace.resource_mode != MODE_STORAGE:
+        return None
+    resources = lovelace.resources
+    return resources if isinstance(resources, ResourceStorageCollection) else None
+
+
+async def _async_register_resource(hass: HomeAssistant, url: str) -> bool:
+    """Dodaj kartę do zasobów dashboardu albo zaktualizuj jej adres.
+
+    Zasoby frontend pobiera przy każdym otwarciu dashboardu, więc karta działa
+    od razu, bez czyszczenia pamięci podręcznej przeglądarki.
+    """
+    if (resources := _storage_resources(hass)) is None:
+        return False
+    await resources.async_get_info()  # wczytuje zasoby z dysku, jeśli trzeba
+    for item in resources.async_items():
+        if item["url"].split("?")[0] != CARD_URL:
+            continue
+        if item["url"] != url:
+            await resources.async_update_item(
+                item["id"], {"res_type": "module", "url": url}
+            )
+        return True
+    await resources.async_create_item({"res_type": "module", "url": url})
+    return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: DefroAirConfigEntry) -> None:
+    """Po usunięciu ostatniej centrali usuń kartę z zasobów dashboardu."""
+    if hass.config_entries.async_entries(DOMAIN):
+        return
+    if (resources := _storage_resources(hass)) is None:
+        return
+    await resources.async_get_info()
+    for item in list(resources.async_items()):
+        if item["url"].split("?")[0] == CARD_URL:
+            await resources.async_delete_item(item["id"])
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DefroAirConfigEntry) -> bool:
