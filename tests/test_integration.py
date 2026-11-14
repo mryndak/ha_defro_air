@@ -334,6 +334,59 @@ async def test_diagnostics(
     assert set(result["raw"]["holding"]) == set(range(100, 156))
 
 
+async def test_dashboard_card_is_served(
+    hass: HomeAssistant,
+    old_unit: MockModbusUnit,
+    entry: MockConfigEntry,
+    hass_client,
+) -> None:
+    """Integracja udostępnia kartę dashboardu i ładuje ją we frontendzie."""
+    from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
+
+    await setup(hass, entry)
+
+    client = await hass_client()
+    response = await client.get("/defro_air/defro-air-card.js")
+    assert response.status == 200
+    body = await response.text()
+    assert 'customElements.define("defro-air-card"' in body
+
+    urls = hass.data[DATA_EXTRA_MODULE_URL].urls
+    assert [u for u in urls if u.startswith("/defro_air/defro-air-card.js?v=")]
+
+    # Przeładowanie wpisu nie rejestruje karty drugi raz.
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len([u for u in hass.data[DATA_EXTRA_MODULE_URL].urls if "defro-air-card" in u]) == 1
+
+
+def test_card_uses_existing_entity_keys() -> None:
+    """Karta szuka encji po kluczach; każdy musi istnieć w integracji."""
+    import re
+
+    from custom_components.defro_air import CARD_PATH
+    from custom_components.defro_air.binary_sensor import BINARY_SENSORS
+    from custom_components.defro_air.number import NUMBERS
+    from custom_components.defro_air.sensor import SENSORS
+    from custom_components.defro_air.switch import SWITCHES
+
+    known = (
+        {f"sensor.{d.key}" for d in SENSORS}
+        | {f"binary_sensor.{d.key}" for d in BINARY_SENSORS}
+        | {f"switch.{d.key}" for d in SWITCHES}
+        | {f"number.{d.key}" for d in NUMBERS}
+        | {"fan.ventilation"}
+    )
+    used = set(
+        re.findall(
+            r'"((?:sensor|binary_sensor|switch|number|fan)\.[a-z0-9_]+)"',
+            CARD_PATH.read_text(encoding="utf-8"),
+        )
+    )
+    assert used, "karta nie odwołuje się do żadnej encji"
+    assert used <= known, sorted(used - known)
+
+
 # --- nowszy program (rejestry 156–174) -------------------------------------
 
 

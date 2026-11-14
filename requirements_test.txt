@@ -2,3 +2,5 @@ pytest-homeassistant-custom-component
 # Wymagania integracji modbus z Home Assistanta (zależność tej integracji).
 modbus-connection[tmodbus]
 pymodbus
+# Integracja ładuje kartę dashboardu przez frontend Home Assistanta.
+home-assistant-frontend

@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from modbus_connection import ModbusTcpParams
 
+from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import async_get_integration
 
-from .const import CONF_UNIT_ID
+from .const import CONF_UNIT_ID, DOMAIN
 from .coordinator import DefroAirConfigEntry, DefroAirCoordinator
 from .device import DefroAir
+
+CARD_URL = f"/{DOMAIN}/defro-air-card.js"
+CARD_PATH = Path(__file__).parent / "frontend" / "defro-air-card.js"
+DATA_CARD_REGISTERED = f"{DOMAIN}_card_registered"
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -22,8 +31,24 @@ PLATFORMS: list[Platform] = [
 ]
 
 
+async def _async_register_card(hass: HomeAssistant) -> None:
+    """Udostępnij kartę dashboardu i załaduj ją we frontendzie (raz na uruchomienie)."""
+    if hass.data.get(DATA_CARD_REGISTERED):
+        return
+    hass.data[DATA_CARD_REGISTERED] = True
+
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(CARD_URL, str(CARD_PATH), cache_headers=False)]
+    )
+    integration = await async_get_integration(hass, DOMAIN)
+    # Wersja w adresie wymusza pobranie nowego pliku po aktualizacji integracji.
+    add_extra_js_url(hass, f"{CARD_URL}?v={integration.version}")
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: DefroAirConfigEntry) -> bool:
     """Skonfiguruj centralę z wpisu konfiguracji."""
+    await _async_register_card(hass)
+
     # Połączenie należy do integracji modbus: jest współdzielone z innymi
     # integracjami na tej samej bramce i zamykane, gdy zwolni je ostatni wpis.
     unit = async_get_unit(

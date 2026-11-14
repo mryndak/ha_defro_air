@@ -26,6 +26,41 @@ Ustawienia → Urządzenia i usługi → Dodaj integrację → **Defro Air**. Po
 IP bramki, port serwera TCP bramki i adres sterownika (domyślnie 1). W opcjach
 wpisu można zmienić odstęp między odczytami (domyślnie 15 s).
 
+## Karta dashboardu
+
+Integracja dostarcza kartę wzorowaną na ekranie głównym panelu ST-340 v2:
+schemat z temperaturami, przepływami i biegami, pasek ikon stanu oraz
+sterowanie. Nie trzeba niczego instalować osobno. W dashboardzie dodaj kartę
+„Defro Air” z listy kart albo wklej w edytorze YAML:
+
+```yaml
+type: custom:defro-air-card
+```
+
+Karta sama znajduje encje integracji. Opcje (obie nieobowiązkowe):
+
+```yaml
+type: custom:defro-air-card
+device_id: 0123456789abcdef   # gdy central jest więcej niż jedna
+title: Rekuperator            # napis zamiast godziny w nagłówku
+```
+
+Co pokazuje i czym steruje:
+
+- strzałki strumieni powietrza; przy otwartym bypassie strumień wywiewany
+  omija wymiennik i pojawia się napis BYPASS,
+- ikony: urlop, party, bypass, grzanie wtórne, antyzamarzanie, awaria
+  (podświetlone, gdy aktywne),
+- **party**: wybór czasu w minutach (od 15, co 15), start i zakończenie,
+  na przycisku widać pozostały czas,
+- **bypass**: włączenie i wyłączenie zezwolenia na bypass,
+- **urlop**: wybór liczby dni, start i zakończenie,
+- sprawność odzysku i odzyskiwana moc,
+- wybór biegu 0–3, jeśli program sterownika udostępnia rejestr 157.
+
+Po aktualizacji integracji odśwież przeglądarkę (Ctrl+F5), żeby załadować
+nową wersję karty.
+
 ## Encje
 
 | Typ | Encje | Rejestry |

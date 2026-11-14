@@ -46,8 +46,8 @@ BINARY_SENSORS: tuple[DefroAirBinarySensorDescription, ...] = (
     _state("bypass_active", device_class=BinarySensorDeviceClass.OPENING),
     _state("antifreeze_active", device_class=BinarySensorDeviceClass.RUNNING),
     _state("holiday_active"),
+    _state("secondary_heating_active", device_class=BinarySensorDeviceClass.HEAT),
     _state("gwc_active", entity_registry_enabled_default=False),
-    _state("secondary_heating_active", entity_registry_enabled_default=False),
     _state("digital_input_gear_3", entity_registry_enabled_default=False),
     _state("digital_input_hood", entity_registry_enabled_default=False),
 )
