@@ -30,7 +30,11 @@ wpisu można zmienić odstęp między odczytami (domyślnie 15 s).
 
 Integracja dostarcza kartę wzorowaną na ekranie głównym panelu ST-340 v2:
 schemat z temperaturami, przepływami i biegami, pasek ikon stanu oraz
-sterowanie. Nie trzeba niczego instalować osobno. W dashboardzie dodaj kartę
+sterowanie.
+
+![Karta Defro Air w Home Assistant](docs/karta.png)
+
+Nie trzeba niczego instalować osobno. W dashboardzie dodaj kartę
 „Defro Air” z listy kart albo wklej w edytorze YAML:
 
 ```yaml
