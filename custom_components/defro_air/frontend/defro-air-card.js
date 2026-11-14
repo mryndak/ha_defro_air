@@ -364,10 +364,11 @@ class DefroAirCard extends HTMLElement {
     // (po stronie zewnętrznej), czerwony ciepłe (po stronie domu). W wymienniku
     // nawiew się ogrzewa (niebieski → czerwony), a wywiew stygnie (czerwony →
     // niebieski). Przy otwartym bypassie wymiany nie ma, więc kolory są stałe.
-    const extractPath = "M 430 437 H 456 Q 496 437 496 395 V 372 Q 496 338 472 314 L 366 226";
-    // Osie pionowych odcinków są 28 jednostek od siebie przy grubości 24,
-    // więc między strumieniami zostaje wąska przerwa.
-    const supplyPath = "M 690 187 L 550 316 Q 524 342 524 376 V 395 Q 524 437 562 437 H 588";
+    // Oba strumienie to gładkie łuki jak na panelu Defro: w środku tworzą
+    // dwa zaokrąglone brzuśce „)(”. Ich najbliższe punkty są 28 jednostek od
+    // siebie przy grubości 24, więc między strumieniami zostaje wąska przerwa.
+    const extractPath = "M 430 437 C 474 437 496 414 496 380 C 496 330 410 268 366 226";
+    const supplyPath = "M 690 187 C 630 245 524 320 524 380 C 524 414 546 437 588 437";
     const exhaustColor = v.bypass ? RED : BLUE; // koniec strumienia wywiewanego
     const supplyEndColor = v.bypass ? BLUE : RED; // koniec strumienia nawiewanego
     const extractHead = head(352, 213, 222, exhaustColor);
@@ -413,7 +414,7 @@ class DefroAirCard extends HTMLElement {
       <g opacity="${stopped(v.supplyGear) ? 0.25 : 1}">
         <path d="${supplyPath}" fill="none" stroke="${supplyStroke}" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
         ${head(586, 437, 0, supplyEndColor)}
-        ${start(700, 178, 138, BLUE)}
+        ${start(726, 152, 136, BLUE)}
       </g>
       ${exchanger}
 
