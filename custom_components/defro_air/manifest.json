@@ -1,0 +1,14 @@
+{
+  "domain": "defro_air",
+  "name": "Defro Air",
+  "codeowners": ["@mryndak"],
+  "config_flow": true,
+  "dependencies": ["modbus"],
+  "documentation": "https://github.com/mryndak/ha_defro_air",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/mryndak/ha_defro_air/issues",
+  "loggers": ["modbus_connection", "tmodbus"],
+  "requirements": [],
+  "version": "0.1.0"
+}

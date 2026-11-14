@@ -1,0 +1,4 @@
+pytest-homeassistant-custom-component
+# Wymagania integracji modbus z Home Assistanta (zależność tej integracji).
+modbus-connection[tmodbus]
+pymodbus

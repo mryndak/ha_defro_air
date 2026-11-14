@@ -1,0 +1,133 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Rekuperator Defro Air",
+        "description": "Podaj adres bramki Modbus TCP (konwertera RS-485), do której podłączony jest port BMS sterownika.",
+        "data": {
+          "host": "Adres IP bramki",
+          "port": "Port",
+          "unit_id": "Adres sterownika (Modbus)"
+        },
+        "data_description": {
+          "host": "Adres konwertera RS-485 na Ethernet/Wi-Fi pracującego w trybie Modbus TCP.",
+          "port": "Port serwera TCP ustawiony w bramce.",
+          "unit_id": "Adres sterownika z menu instalatora, domyślnie 1."
+        }
+      },
+      "reconfigure": {
+        "title": "Zmiana adresu centrali",
+        "data": {
+          "host": "Adres IP bramki",
+          "port": "Port",
+          "unit_id": "Adres sterownika (Modbus)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Brak odpowiedzi. Sprawdź adres, port i czy komunikacja Modbus jest włączona w sterowniku.",
+      "unsupported_device": "Urządzenie odpowiada, ale nie udostępnia rejestrów sterownika Defro (100–155).",
+      "unknown": "Nieoczekiwany błąd, szczegóły w logu."
+    },
+    "abort": {
+      "already_configured": "Ta centrala jest już skonfigurowana.",
+      "reconfigure_successful": "Adres centrali został zmieniony."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Odstęp między odczytami"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "supply_flow": { "name": "Wydatek nawiewu" },
+      "extract_flow": { "name": "Wydatek wywiewu" },
+      "supply_gear": { "name": "Bieg nawiewu" },
+      "extract_gear": { "name": "Bieg wywiewu" },
+      "outdoor_temperature": { "name": "Temperatura czerpni" },
+      "extract_temperature": { "name": "Temperatura wywiewu" },
+      "supply_temperature": { "name": "Temperatura nawiewu" },
+      "exhaust_temperature": { "name": "Temperatura wyrzutni" },
+      "heater_control_temperature": { "name": "Temperatura kontroli nagrzewnicy" },
+      "gwc_temperature": { "name": "Temperatura GWC" },
+      "secondary_heating_temperature": { "name": "Temperatura grzania wtórnego" },
+      "efficiency": { "name": "Sprawność odzysku ciepła" },
+      "recovered_power": { "name": "Odzyskiwana moc" },
+      "filter_days": { "name": "Stan filtrów" },
+      "error_code": {
+        "name": "Kod błędów",
+        "state_attributes": {
+          "errors": {
+            "name": "Błędy",
+            "state": {
+              "exhaust_fan": "Wentylator wywiewu",
+              "supply_fan": "Wentylator nawiewu (obroty)",
+              "outdoor_sensor": "Czujnik czerpni",
+              "extract_sensor": "Czujnik wywiewu",
+              "supply_sensor": "Czujnik nawiewu",
+              "exhaust_sensor": "Czujnik wyrzutni",
+              "outdoor_sensor_2": "Czujnik czerpni (drugi)",
+              "supply_sensor_2": "Czujnik nawiewu (drugi)",
+              "exhaust_pressure_sensor": "Czujnik ciśnienia wyrzutu",
+              "supply_pressure_sensor": "Czujnik ciśnienia nawiewu",
+              "humidifier_sensor": "Czujnik nawilżacza",
+              "humidifier_sensor_2": "Czujnik nawilżacza (drugi)",
+              "control_sensor": "Czujnik kontrolny"
+            }
+          }
+        }
+      },
+      "clock": { "name": "Zegar sterownika" },
+      "filter_runtime": { "name": "Czas pracy filtrów" },
+      "unit_size": { "name": "Rozmiar centrali" }
+    },
+    "binary_sensor": {
+      "problem": { "name": "Awaria" },
+      "bypass_active": { "name": "Bypass" },
+      "antifreeze_active": { "name": "Antyzamarzanie" },
+      "holiday_active": { "name": "Urlop" },
+      "gwc_active": { "name": "GWC" },
+      "secondary_heating_active": { "name": "Grzanie wtórne" },
+      "digital_input_gear_3": { "name": "Wejście cyfrowe: bieg 3" },
+      "digital_input_hood": { "name": "Wejście cyfrowe: okap" }
+    },
+    "switch": {
+      "bypass_enabled": { "name": "Bypass" },
+      "gwc_enabled": { "name": "GWC" },
+      "weekly_enabled": { "name": "Sterowanie tygodniowe" },
+      "windows_mode": { "name": "Tryb okna" },
+      "humidifier_enabled": { "name": "Nawilżacz" },
+      "flow_balancing": { "name": "Flow balancing" }
+    },
+    "number": {
+      "holiday_days": { "name": "Urlop" },
+      "party": { "name": "Party" },
+      "fireplace": { "name": "Palenisko" },
+      "gear_1_power": { "name": "Moc biegu 1" },
+      "gear_2_power": { "name": "Moc biegu 2" },
+      "gear_3_power": { "name": "Moc biegu 3" },
+      "gear_1_flow": { "name": "Przepływ biegu 1" },
+      "gear_2_flow": { "name": "Przepływ biegu 2" },
+      "gear_3_flow": { "name": "Przepływ biegu 3" },
+      "bypass_low_temperature": { "name": "Bypass: dolna temperatura załączenia" },
+      "bypass_comfort_temperature": { "name": "Bypass: temperatura komfortu" }
+    },
+    "button": {
+      "sync_clock": { "name": "Synchronizuj zegar" }
+    },
+    "fan": {
+      "ventilation": { "name": "Wentylacja" }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": { "message": "Brak połączenia z centralą: {error}" },
+    "no_component_answered": { "message": "{name}: centrala nie odpowiedziała na żaden odczyt" },
+    "write_failed": { "message": "Zapis do centrali nie powiódł się: {error}" },
+    "invalid_value": { "message": "Nieprawidłowa wartość: {error}" }
+  }
+}

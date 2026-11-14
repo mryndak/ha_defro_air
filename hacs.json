@@ -1,0 +1,6 @@
+{
+  "name": "Defro Air",
+  "homeassistant": "2026.10.0",
+  "country": ["PL"],
+  "render_readme": true
+}

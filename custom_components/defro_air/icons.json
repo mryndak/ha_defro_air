@@ -1,0 +1,40 @@
+{
+  "entity": {
+    "sensor": {
+      "supply_gear": { "default": "mdi:fan-chevron-down" },
+      "extract_gear": { "default": "mdi:fan-chevron-up" },
+      "efficiency": { "default": "mdi:percent-circle-outline" },
+      "recovered_power": { "default": "mdi:heat-wave" },
+      "filter_days": { "default": "mdi:air-filter" },
+      "filter_runtime": { "default": "mdi:air-filter" },
+      "error_code": { "default": "mdi:alert-circle-outline" },
+      "unit_size": { "default": "mdi:ruler" }
+    },
+    "binary_sensor": {
+      "bypass_active": { "default": "mdi:valve" },
+      "antifreeze_active": { "default": "mdi:snowflake-alert" },
+      "holiday_active": { "default": "mdi:beach" },
+      "gwc_active": { "default": "mdi:pipe" },
+      "secondary_heating_active": { "default": "mdi:heating-coil" }
+    },
+    "switch": {
+      "bypass_enabled": { "default": "mdi:valve" },
+      "gwc_enabled": { "default": "mdi:pipe" },
+      "weekly_enabled": { "default": "mdi:calendar-clock" },
+      "windows_mode": { "default": "mdi:window-open-variant" },
+      "humidifier_enabled": { "default": "mdi:air-humidifier" },
+      "flow_balancing": { "default": "mdi:scale-balance" }
+    },
+    "number": {
+      "holiday_days": { "default": "mdi:beach" },
+      "party": { "default": "mdi:party-popper" },
+      "fireplace": { "default": "mdi:fireplace" }
+    },
+    "button": {
+      "sync_clock": { "default": "mdi:clock-check-outline" }
+    },
+    "fan": {
+      "ventilation": { "default": "mdi:air-filter" }
+    }
+  }
+}

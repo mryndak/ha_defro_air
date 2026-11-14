@@ -1,0 +1,133 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Defro Air heat recovery unit",
+        "description": "Enter the address of the Modbus TCP gateway (RS-485 converter) wired to the controller's BMS port.",
+        "data": {
+          "host": "Gateway IP address",
+          "port": "Port",
+          "unit_id": "Controller address (Modbus)"
+        },
+        "data_description": {
+          "host": "Address of the RS-485 to Ethernet/Wi-Fi converter running in Modbus TCP mode.",
+          "port": "TCP server port set in the gateway.",
+          "unit_id": "Controller address from the installer menu, 1 by default."
+        }
+      },
+      "reconfigure": {
+        "title": "Change the unit address",
+        "data": {
+          "host": "Gateway IP address",
+          "port": "Port",
+          "unit_id": "Controller address (Modbus)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No response. Check the address, the port and that Modbus is enabled in the controller.",
+      "unsupported_device": "The device answers but does not serve the Defro controller registers (100–155).",
+      "unknown": "Unexpected error, see the log for details."
+    },
+    "abort": {
+      "already_configured": "This unit is already configured.",
+      "reconfigure_successful": "The unit address was changed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Polling interval"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "supply_flow": { "name": "Supply air flow" },
+      "extract_flow": { "name": "Extract air flow" },
+      "supply_gear": { "name": "Supply fan gear" },
+      "extract_gear": { "name": "Extract fan gear" },
+      "outdoor_temperature": { "name": "Outdoor air temperature" },
+      "extract_temperature": { "name": "Extract air temperature" },
+      "supply_temperature": { "name": "Supply air temperature" },
+      "exhaust_temperature": { "name": "Exhaust air temperature" },
+      "heater_control_temperature": { "name": "Heater control temperature" },
+      "gwc_temperature": { "name": "Ground heat exchanger temperature" },
+      "secondary_heating_temperature": { "name": "Secondary heating temperature" },
+      "efficiency": { "name": "Heat recovery efficiency" },
+      "recovered_power": { "name": "Recovered power" },
+      "filter_days": { "name": "Filter status" },
+      "error_code": {
+        "name": "Error code",
+        "state_attributes": {
+          "errors": {
+            "name": "Errors",
+            "state": {
+              "exhaust_fan": "Extract fan",
+              "supply_fan": "Supply fan (speed)",
+              "outdoor_sensor": "Outdoor air sensor",
+              "extract_sensor": "Extract air sensor",
+              "supply_sensor": "Supply air sensor",
+              "exhaust_sensor": "Exhaust air sensor",
+              "outdoor_sensor_2": "Outdoor air sensor (second)",
+              "supply_sensor_2": "Supply air sensor (second)",
+              "exhaust_pressure_sensor": "Exhaust pressure sensor",
+              "supply_pressure_sensor": "Supply pressure sensor",
+              "humidifier_sensor": "Humidifier sensor",
+              "humidifier_sensor_2": "Humidifier sensor (second)",
+              "control_sensor": "Control sensor"
+            }
+          }
+        }
+      },
+      "clock": { "name": "Controller clock" },
+      "filter_runtime": { "name": "Filter runtime" },
+      "unit_size": { "name": "Unit size" }
+    },
+    "binary_sensor": {
+      "problem": { "name": "Fault" },
+      "bypass_active": { "name": "Bypass" },
+      "antifreeze_active": { "name": "Frost protection" },
+      "holiday_active": { "name": "Holiday" },
+      "gwc_active": { "name": "Ground heat exchanger" },
+      "secondary_heating_active": { "name": "Secondary heating" },
+      "digital_input_gear_3": { "name": "Digital input: gear 3" },
+      "digital_input_hood": { "name": "Digital input: hood" }
+    },
+    "switch": {
+      "bypass_enabled": { "name": "Bypass" },
+      "gwc_enabled": { "name": "Ground heat exchanger" },
+      "weekly_enabled": { "name": "Weekly schedule" },
+      "windows_mode": { "name": "Windows mode" },
+      "humidifier_enabled": { "name": "Humidifier" },
+      "flow_balancing": { "name": "Flow balancing" }
+    },
+    "number": {
+      "holiday_days": { "name": "Holiday" },
+      "party": { "name": "Party" },
+      "fireplace": { "name": "Fireplace" },
+      "gear_1_power": { "name": "Gear 1 power" },
+      "gear_2_power": { "name": "Gear 2 power" },
+      "gear_3_power": { "name": "Gear 3 power" },
+      "gear_1_flow": { "name": "Gear 1 flow" },
+      "gear_2_flow": { "name": "Gear 2 flow" },
+      "gear_3_flow": { "name": "Gear 3 flow" },
+      "bypass_low_temperature": { "name": "Bypass: lower switch-on temperature" },
+      "bypass_comfort_temperature": { "name": "Bypass: comfort temperature" }
+    },
+    "button": {
+      "sync_clock": { "name": "Synchronize clock" }
+    },
+    "fan": {
+      "ventilation": { "name": "Ventilation" }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": { "message": "Cannot reach the unit: {error}" },
+    "no_component_answered": { "message": "{name}: the unit answered none of the reads" },
+    "write_failed": { "message": "Writing to the unit failed: {error}" },
+    "invalid_value": { "message": "Invalid value: {error}" }
+  }
+}
