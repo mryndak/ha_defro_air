@@ -16,7 +16,7 @@ const PARTY_MIN = 15;
 const PARTY_MAX = 720;
 const PARTY_STEP = 15;
 const HOLIDAY_MAX = 60;
-const DAYS = ["Nd.", "Pn.", "Wt.", "Śr.", "Cz.", "Pt.", "Sb."];
+const FIREPLACE_SECONDS = 180;
 
 const STYLE = `
   :host { display: block; }
@@ -27,15 +27,37 @@ const STYLE = `
     font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
   .top {
-    display: flex; align-items: center; gap: 14px;
+    display: flex; align-items: center; gap: 14px; min-height: 28px;
     padding: 10px 16px; background: rgba(0, 0, 0, .45);
   }
-  .clock { font-size: 1.05em; letter-spacing: .04em; white-space: nowrap; }
-  .icons { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
-  .icon { opacity: .22; --mdc-icon-size: 22px; display: inline-flex; }
+  .title { font-size: 1.05em; letter-spacing: .04em; white-space: nowrap; }
+  .icons { display: flex; gap: 12px; flex: 1; flex-wrap: wrap; }
+  .icon { opacity: .22; --mdc-icon-size: 24px; display: inline-flex; }
   .icon.on { opacity: 1; }
   .icon.alert.on { color: #ffb300; }
   .icon.fault.on { color: #ff5252; }
+  .filter {
+    display: flex; flex: 1; justify-content: flex-end; align-items: center; gap: 6px;
+    white-space: nowrap; --mdc-icon-size: 24px; font-size: 1.05em;
+  }
+  .ctl { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+  /* --btn wylicza karta z własnej szerokości, żeby przyciski mieściły się w jednym rzędzie. */
+  .btn {
+    width: var(--btn, 54px); height: var(--btn, 54px); flex: none;
+    border-radius: 50%; border: 0; cursor: pointer; padding: 0;
+    background: #fff; color: #111; --mdc-icon-size: calc(var(--btn, 54px) * .56);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .spacer { flex: 1; }
+  .btn.on { background: #ffb300; }
+  .btn.open { outline: 3px solid ${BLUE}; }
+  .btn[disabled] { opacity: .35; cursor: default; }
+  .digit { font-size: calc(var(--btn, 54px) * .46); font-weight: 600; line-height: 1; }
+  .sep { width: 1px; align-self: stretch; margin: 4px 2px 22px; background: #555; }
+  .cap { font-size: .85em; color: #ddd; min-height: 1.2em; white-space: nowrap; }
+  .eff { text-align: center; white-space: nowrap; line-height: 1.15; }
+  .eff .name { color: #aaa; font-size: .8em; }
+  .eff .val { font-size: 1.1em; }
   svg { display: block; width: 100%; height: auto; }
   .label { font-size: 34px; font-weight: 600; }
   .temp { font-size: 40px; font-weight: 300; fill: #fff; }
@@ -43,7 +65,10 @@ const STYLE = `
   .gear { font-size: 36px; font-weight: 300; fill: #fff; }
   .small { font-size: 22px; fill: #ccc; }
   .tag { font-size: 22px; font-weight: 700; letter-spacing: .12em; fill: #ffb300; }
-  .bottom { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 14px 12px; align-items: center; }
+  .bottom {
+    display: flex; flex-wrap: nowrap; gap: var(--gap, 10px);
+    padding: 4px 16px 12px; align-items: flex-start;
+  }
   .pill {
     border: 0; border-radius: 999px; padding: 6px 16px; cursor: pointer;
     background: #fff; color: #111; font: inherit; font-size: 1em; white-space: nowrap;
@@ -96,12 +121,29 @@ class DefroAirCard extends HTMLElement {
   }
 
   connectedCallback() {
-    // Zegar w nagłówku: odśwież raz na pół minuty.
-    this._timer = setInterval(() => this._render(true), 30000);
+    if (!this._observer && typeof ResizeObserver !== "undefined") {
+      this._observer = new ResizeObserver(() => this._fitButtons());
+    }
+    if (this._observer) this._observer.observe(this);
+    this._fitButtons();
   }
 
   disconnectedCallback() {
-    clearInterval(this._timer);
+    if (this._observer) this._observer.disconnect();
+  }
+
+  // Dobierz rozmiar przycisków do szerokości karty: wszystkie w jednym rzędzie.
+  _fitButtons() {
+    const width = this.getBoundingClientRect().width;
+    const count = this._buttonCount || 4;
+    if (!width) return;
+    const gap = width < 420 ? 5 : 10;
+    // Kreski: zawsze przed urlopem, a przy wyborze biegu także przed „stop”.
+    const separators = (this._hasGears ? 2 : 1) * (gap + 5);
+    const available = width - 32 - separators - gap * count; // count: odstępy + rozpórka
+    const size = Math.max(26, Math.min(54, Math.floor(available / count)));
+    this.style.setProperty("--btn", `${size}px`);
+    this.style.setProperty("--gap", `${gap}px`);
   }
 
   set hass(hass) {
@@ -157,6 +199,11 @@ class DefroAirCard extends HTMLElement {
     if (action === "toggle-party") this._open = this._open === "party" ? null : "party";
     else if (action === "toggle-holiday") this._open = this._open === "holiday" ? null : "holiday";
     else if (action === "bypass") this._call("switch", "toggle", "switch.bypass_enabled");
+    else if (action === "fireplace")
+      // Palenisko ma stały czas (3 minuty, jak na panelu); ponowne kliknięcie je kończy.
+      this._call("number", "set_value", "number.fireplace", {
+        value: (this._number("number.fireplace") || 0) > 0 ? 0 : FIREPLACE_SECONDS,
+      });
     else if (action === "party-minus")
       this._partyMinutes = clamp(this._partyMinutes - PARTY_STEP, PARTY_MIN, PARTY_MAX);
     else if (action === "party-plus")
@@ -196,12 +243,9 @@ class DefroAirCard extends HTMLElement {
       return;
     }
 
-    const now = new Date();
-    const clock = `${DAYS[now.getDay()]} ${String(now.getHours()).padStart(2, "0")}:${String(
-      now.getMinutes()
-    ).padStart(2, "0")}`;
     const view = {
-      clock: this._config.title || clock,
+      title: this._config.title || "",
+      filterDays: this._number("sensor.filter_days"),
       outdoor: this._number("sensor.outdoor_temperature"),
       extract: this._number("sensor.extract_temperature"),
       supply: this._number("sensor.supply_temperature"),
@@ -222,6 +266,7 @@ class DefroAirCard extends HTMLElement {
       heater: this._on("binary_sensor.secondary_heating_active"),
       fault: this._on("binary_sensor.problem"),
       party: this._number("number.party"),
+      fireplace: this._ids["number.fireplace"] ? this._number("number.fireplace") : undefined,
       targetGear: this._ids["fan.ventilation"]
         ? this._gearFromFan(this._hass.states[this._ids["fan.ventilation"]])
         : undefined,
@@ -233,6 +278,14 @@ class DefroAirCard extends HTMLElement {
     const signature = JSON.stringify(view);
     if (!force && signature === this._signature) return;
     this._signature = signature;
+
+    this._hasGears = view.targetGear !== undefined;
+    this._buttonCount =
+      2 + // party, urlop
+      (view.fireplace !== undefined ? 1 : 0) +
+      (view.hasBypassSwitch ? 1 : 0) +
+      (this._hasGears ? 4 : 0);
+    this._fitButtons();
 
     this.shadowRoot.innerHTML = `<style>${STYLE}</style>
       <ha-card>
@@ -254,15 +307,23 @@ class DefroAirCard extends HTMLElement {
     const icon = (name, on, title, extra = "") =>
       `<span class="icon ${extra} ${on ? "on" : ""}" title="${esc(title)}${on ? "" : " (nieaktywne)"}">
          <ha-icon icon="${name}"></ha-icon></span>`;
+    const days = v.filterDays === null ? "–" : `${Math.round(v.filterDays)} dni`;
+    const values = [];
+    if (v.efficiency !== null) values.push(`${Math.round(v.efficiency)}%`);
+    if (v.power !== null) values.push(`${Math.round(v.power)} W`);
     return `<div class="top">
-      <span class="clock">${esc(v.clock)}</span>
+      ${v.title ? `<span class="title">${esc(v.title)}</span>` : ""}
       <span class="icons">
-        ${icon("mdi:bag-suitcase", v.holiday, "Urlop")}
-        ${icon("mdi:party-popper", (v.party || 0) > 0, "Party")}
-        ${icon("mdi:valve", v.bypass, "Bypass otwarty")}
         ${icon("mdi:heating-coil", v.heater, "Grzanie wtórne", "alert")}
         ${icon("mdi:snowflake-alert", v.antifreeze, "Antyzamarzanie (nagrzewnica wstępna)", "alert")}
         ${icon("mdi:alert", v.fault, "Awaria", "fault")}
+      </span>
+      <span class="eff">
+        <div class="name">sprawność</div>
+        <div class="val">${esc(values.join(" · ") || "–")}</div>
+      </span>
+      <span class="filter" title="Filtry: dni od wymiany">
+        <ha-icon icon="mdi:air-filter"></ha-icon>${esc(days)}
       </span>
     </div>`;
   }
@@ -293,15 +354,27 @@ class DefroAirCard extends HTMLElement {
 
     // Praca normalna: oba strumienie stykają się w środku (wymiennik).
     // Bypass: strumień wywiewany omija wymiennik, więc strzałki się rozchodzą.
-    const red = v.bypass
-      ? "M 430 437 H 415 Q 372 437 372 395 V 300 Q 372 270 352 250 L 340 238"
-      : "M 430 437 H 458 Q 500 437 500 395 V 372 Q 500 338 474 314 L 366 226";
-    const redHead = v.bypass ? head(326, 224, 225, RED) : head(352, 213, 222, RED);
-    const blue = "M 690 187 L 548 316 Q 516 345 516 376 V 395 Q 516 437 558 437 H 588";
+    // Napisy mają stałe kolory z panelu Defro (wywiew i wyrzutnia czerwone,
+    // czerpnia i nawiew niebieskie), a kolor strzałek pokazuje temperaturę.
+    // Kolor strumienia oznacza temperaturę: niebieski to powietrze zimne
+    // (po stronie zewnętrznej), czerwony ciepłe (po stronie domu). W wymienniku
+    // nawiew się ogrzewa (niebieski → czerwony), a wywiew stygnie (czerwony →
+    // niebieski). Przy otwartym bypassie wymiany nie ma, więc kolory są stałe.
+    const extractPath = "M 430 437 H 456 Q 496 437 496 395 V 372 Q 496 338 472 314 L 366 226";
+    // Osie pionowych odcinków są 28 jednostek od siebie przy grubości 24,
+    // więc między strumieniami zostaje wąska przerwa.
+    const supplyPath = "M 690 187 L 550 316 Q 524 342 524 376 V 395 Q 524 437 562 437 H 588";
+    const exhaustColor = v.bypass ? RED : BLUE; // koniec strumienia wywiewanego
+    const supplyEndColor = v.bypass ? BLUE : RED; // koniec strumienia nawiewanego
+    const extractHead = head(352, 213, 222, exhaustColor);
+    const extractStroke = v.bypass ? RED : "url(#extract)";
+    const supplyStroke = v.bypass ? BLUE : "url(#supply)";
+
+    // Przy otwartym bypassie kształt strzałek zostaje ten sam, ale strumień
+    // wywiewany jest przygaszony (nie oddaje ciepła), a pod spodem jest napis.
     const exchanger = v.bypass
-      ? `<text class="tag" x="445" y="350" text-anchor="middle">BYPASS</text>
-         <line x1="445" y1="362" x2="445" y2="420" stroke="#ffb300" stroke-width="3" stroke-dasharray="6 6"/>`
-      : `<rect x="497" y="360" width="22" height="46" rx="4" fill="#fff" opacity=".85"/>`;
+      ? `<text class="tag" x="510" y="490" text-anchor="middle">BYPASS</text>`
+      : "";
 
     const heaterRow =
       v.heater || v.heaterTemp !== null
@@ -313,17 +386,31 @@ class DefroAirCard extends HTMLElement {
         : "";
 
     const running = (value) => value !== null && value > 0;
+    // Wentylator na biegu 0 (np. wywiew w trybie palenisko): strumień przygaszony.
+    const stopped = (value) => value === 0;
     return `<svg viewBox="0 70 1000 430" role="img" aria-label="Schemat rekuperatora">
       <polygon fill="#9b9b9b" points="430,162 545,96 625,146 625,100 672,100 672,176 812,290 745,290 545,152 478,192"/>
       <polygon fill="#f1f1f1" points="250,362 535,170 700,272 640,272 535,206 305,362"/>
       <rect fill="#f1f1f1" x="275" y="356" width="30" height="110"/>
 
-      <path d="${red}" fill="none" stroke="${RED}" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
-      ${redHead}
-      ${start(432, 437, 180, RED)}
-      <path d="${blue}" fill="none" stroke="${BLUE}" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
-      ${head(586, 437, 0, BLUE)}
-      ${start(700, 178, 138, BLUE)}
+      <defs>
+        <linearGradient id="supply" gradientUnits="userSpaceOnUse" x1="0" y1="325" x2="0" y2="432">
+          <stop offset="0" stop-color="${BLUE}"/><stop offset="1" stop-color="${RED}"/>
+        </linearGradient>
+        <linearGradient id="extract" gradientUnits="userSpaceOnUse" x1="0" y1="432" x2="0" y2="325">
+          <stop offset="0" stop-color="${RED}"/><stop offset="1" stop-color="${BLUE}"/>
+        </linearGradient>
+      </defs>
+      <g opacity="${stopped(v.extractGear) || v.bypass ? 0.25 : 1}">
+        <path d="${extractPath}" fill="none" stroke="${extractStroke}" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+        ${extractHead}
+        ${start(432, 437, 180, RED)}
+      </g>
+      <g opacity="${stopped(v.supplyGear) ? 0.25 : 1}">
+        <path d="${supplyPath}" fill="none" stroke="${supplyStroke}" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+        ${head(586, 437, 0, supplyEndColor)}
+        ${start(700, 178, 138, BLUE)}
+      </g>
       ${exchanger}
 
       <text class="label" fill="${RED}" x="50" y="130">Wyrzutnia</text>
@@ -351,36 +438,56 @@ class DefroAirCard extends HTMLElement {
     const partyOn = (v.party || 0) > 0;
     const hhmm = (minutes) =>
       `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-    const pill = (action, text, on, open = false, disabled = false) =>
-      `<button class="pill ${on ? "on" : ""} ${open ? "open" : ""}" data-action="${action}" ${
-        disabled ? "disabled" : ""
-      }>${esc(text)}</button>`;
+    // Przycisk z ikoną; pod spodem krótki podpis (np. pozostały czas).
+    const control = (action, icon, title, on, caption, open = false, disabled = false) =>
+      `<span class="ctl">
+         <button class="btn ${on ? "on" : ""} ${open ? "open" : ""}" data-action="${action}"
+           title="${esc(title)}" aria-label="${esc(title)}" ${disabled ? "disabled" : ""}>
+           <ha-icon icon="${icon}"></ha-icon>
+         </button>
+         <span class="cap">${esc(caption)}</span>
+       </span>`;
 
-    const info = [];
-    if (v.efficiency !== null) info.push(`sprawność ${Math.round(v.efficiency)}%`);
-    if (v.power !== null) info.push(`${Math.round(v.power)} W`);
+    const holidayOn = v.holiday || (v.holidayDays || 0) > 0;
+    const fireplaceOn = (v.fireplace || 0) > 0;
 
+    // Wybór biegu: okrągłe przyciski ze znakiem stopu i cyframi 1–3.
+    const gear = (g) =>
+      `<span class="ctl">
+         <button class="btn ${v.targetGear === g ? "on" : ""}" data-action="gear-${g}"
+           title="${g === 0 ? "Stop" : `Bieg ${g}`}" aria-label="${g === 0 ? "Stop" : `Bieg ${g}`}">
+           ${g === 0 ? '<ha-icon icon="mdi:stop"></ha-icon>' : `<span class="digit">${g}</span>`}
+         </button>
+         <span class="cap"></span>
+       </span>`;
     const gears =
       v.targetGear === undefined
         ? ""
-        : [0, 1, 2, 3].map((g) => pill(`gear-${g}`, g === 0 ? "stop" : `bieg ${g}`, v.targetGear === g)).join("");
+        : `<span class="sep"></span>${[0, 1, 2, 3].map(gear).join("")}`;
 
+    // Kolejność: party, palenisko, bypass, biegi (stop, 1, 2, 3), a urlop
+    // osobno, dosunięty do prawej krawędzi.
     return `<div class="bottom">
-      ${pill("toggle-party", `party ${hhmm(partyOn ? v.party : 0)}`, partyOn, v.open === "party", v.party === null)}
+      ${control("toggle-party", "mdi:party-popper", "Party", partyOn, partyOn ? hhmm(v.party) : "",
+        v.open === "party", v.party === null)}
+      ${
+        v.fireplace === undefined
+          ? ""
+          : control("fireplace", "mdi:fireplace", "Palenisko: sam nawiew przez 3 minuty", fireplaceOn,
+              fireplaceOn ? `${Math.floor(v.fireplace / 60)}:${String(v.fireplace % 60).padStart(2, "0")}` : "",
+              false, v.fireplace === null)
+      }
       ${
         v.hasBypassSwitch
-          ? pill("bypass", `bypass ${v.bypassEnabled ? "wł." : "wył."}`, v.bypassEnabled)
+          ? control("bypass", "mdi:debug-step-over", `Bypass: ${v.bypassEnabled ? "włączony" : "wyłączony"}`,
+              v.bypassEnabled, v.bypassEnabled ? "wł." : "")
           : ""
       }
-      ${pill(
-        "toggle-holiday",
-        v.holiday || (v.holidayDays || 0) > 0 ? `urlop ${v.holidayDays || ""} d` : "urlop",
-        v.holiday || (v.holidayDays || 0) > 0,
-        v.open === "holiday",
-        v.holidayDays === null
-      )}
       ${gears}
-      <span class="info">${esc(info.join(" · "))}</span>
+      <span class="spacer"></span>
+      <span class="sep"></span>
+      ${control("toggle-holiday", "mdi:bag-suitcase", "Urlop", holidayOn,
+        holidayOn ? `${v.holidayDays || ""} d` : "", v.open === "holiday", v.holidayDays === null)}
     </div>`;
   }
 

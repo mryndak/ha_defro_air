@@ -47,16 +47,21 @@ title: Rekuperator            # napis zamiast godziny w nagłówku
 
 Co pokazuje i czym steruje:
 
-- strzałki strumieni powietrza; przy otwartym bypassie strumień wywiewany
-  omija wymiennik i pojawia się napis BYPASS,
-- ikony: urlop, party, bypass, grzanie wtórne, antyzamarzanie, awaria
-  (podświetlone, gdy aktywne),
-- **party**: wybór czasu w minutach (od 15, co 15), start i zakończenie,
-  na przycisku widać pozostały czas,
-- **bypass**: włączenie i wyłączenie zezwolenia na bypass,
-- **urlop**: wybór liczby dni, start i zakończenie,
-- sprawność odzysku i odzyskiwana moc,
-- wybór biegu 0–3, jeśli program sterownika udostępnia rejestr 157.
+- strzałki strumieni powietrza barwione temperaturą: nawiew przechodzi
+  z niebieskiego w czerwony, wywiew z czerwonego w niebieski; strumień
+  zatrzymanego wentylatora jest przygaszony,
+- przy otwartym bypassie strumień wywiewany jest przygaszony i pojawia się
+  napis BYPASS,
+- górny pasek: ikony grzania wtórnego, antyzamarzania i awarii (podświetlone,
+  gdy aktywne), sprawność odzysku z odzyskiwaną mocą oraz liczba dni filtrów,
+- przyciski w jednym rzędzie, dopasowane do szerokości karty:
+  - **party**: wybór czasu w minutach (od 15, co 15), start i zakończenie,
+    pod przyciskiem widać pozostały czas,
+  - **palenisko**: sam nawiew przez 3 minuty; ponowne kliknięcie kończy tryb,
+  - **bypass**: włączenie i wyłączenie zezwolenia na bypass,
+  - **stop, 1, 2, 3**: wybór biegu, jeśli program sterownika udostępnia
+    rejestr 157,
+  - **urlop**: wybór liczby dni, start i zakończenie.
 
 Integracja sama dodaje kartę do zasobów dashboardu (Ustawienia → Dashboardy →
 Zasoby) i aktualizuje jej adres przy zmianie wersji, więc wystarczy ponownie
@@ -109,7 +114,11 @@ i została sprawdzona na centrali z modułem MBP 1.1.4:
 - party (147) to czas w minutach: wentylatory przechodzą na bieg 3, rejestr
   odlicza w dół, wartości 1–14 sterownik podnosi do 15, zapis 0 wyłącza tryb,
 - w trybie urlop biegi nawiewu i wywiewu (102, 103) pokazują wartość 4,
-  czyli pracę z mocą minimalną.
+  czyli pracę z mocą minimalną,
+- palenisko (146) to czas w sekundach, najwyżej 180: nawiew przechodzi na
+  bieg 3, wywiew na bieg 0, rejestr odlicza w dół, zapis 0 wyłącza tryb,
+- bramka RS-485 obsługuje poprawnie jednego klienta naraz: drugi program
+  Modbus uruchomiony równolegle z Home Assistantem może dostać cudzą odpowiedź.
 
 ## Testy
 

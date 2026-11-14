@@ -118,7 +118,11 @@ class Core(Component):
     )
     """Tryb urlop: liczba dni, 0 wyłącza. Sprawdzone na centrali."""
     fireplace = integer(146, signed=False, writable=_in_range(0, MAX_FIREPLACE))
-    """Funkcja palenisko: czas w sekundach według instrukcji, 0 wyłącza."""
+    """Funkcja palenisko: pozostały czas w sekundach, 0 wyłącza.
+
+    Sprawdzone na centrali: nawiew przechodzi na bieg 3, wywiew na bieg 0,
+    a rejestr odlicza w dół co sekundę.
+    """
     party = integer(147, signed=False, writable=_in_range(0, MAX_PARTY))
     """Funkcja party: pozostały czas w minutach, 0 wyłącza.
 
