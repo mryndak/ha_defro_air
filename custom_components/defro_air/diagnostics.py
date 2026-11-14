@@ -16,11 +16,7 @@ TO_REDACT = {CONF_HOST}
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: DefroAirConfigEntry
 ) -> dict[str, Any]:
-    """Zwróć diagnostykę wpisu.
-
-    Surowa mapa rejestrów ładuje się wprost do ``modbus_connection.mock``
-    (``load_raw``), więc zgłoszony problem da się odtworzyć bez urządzenia.
-    """
+    """Surowe rejestry w formacie ``modbus_connection.mock.load_raw``."""
     coordinator = entry.runtime_data
     device = coordinator.device
     return {

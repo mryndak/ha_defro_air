@@ -1,13 +1,4 @@
-/*
- * Karta Defro Air: widok wzorowany na ekranie głównym panelu ST-340 v2.
- *
- * Użycie w dashboardzie:
- *   type: custom:defro-air-card
- *
- * Karta sama znajduje encje integracji defro_air. Opcje:
- *   device_id: <id urządzenia>   # gdy central jest więcej niż jedna
- *   title: <tekst>               # napis zamiast godziny w lewym górnym rogu
- */
+// Karta Defro Air (type: custom:defro-air-card), opcje: device_id, title.
 
 const PLATFORM = "defro_air";
 const RED = "#e8195a";
@@ -42,7 +33,6 @@ const STYLE = `
     white-space: nowrap; --mdc-icon-size: 24px; font-size: 1.05em;
   }
   .ctl { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
-  /* --btn wylicza karta z własnej szerokości, żeby przyciski mieściły się w jednym rzędzie. */
   .btn {
     width: var(--btn, 54px); height: var(--btn, 54px); flex: none;
     border-radius: 50%; border: 0; cursor: pointer; padding: 0;
@@ -133,17 +123,13 @@ class DefroAirCard extends HTMLElement {
     if (this._observer) this._observer.disconnect();
   }
 
-  // Dobierz rozmiar przycisków do szerokości karty: wszystkie w jednym rzędzie.
   _fitButtons() {
     const width = this.getBoundingClientRect().width;
     const count = this._buttonCount || 4;
     if (!width) return;
     const gap = width < 420 ? 5 : 10;
-    // Kreski: zawsze przed urlopem, a przy wyborze biegu także przed „stop”.
     const separators = (this._hasGears ? 2 : 1) * (gap + 5);
     const available = width - 32 - separators - gap * count; // count: odstępy + rozpórka
-    // Przyciski mają średnicę ikony wiatraka ze schematu (70 z 1000 jednostek
-    // szerokości rysunku), chyba że w rzędzie jest na to za ciasno.
     const fan = Math.round(width * FAN_ICON_RATIO);
     const size = Math.max(22, Math.min(fan, Math.floor(available / count)));
     this.style.setProperty("--btn", `${size}px`);
@@ -155,7 +141,6 @@ class DefroAirCard extends HTMLElement {
     this._render();
   }
 
-  // --- encje -------------------------------------------------------------
 
   _entities() {
     const found = {};
@@ -187,7 +172,6 @@ class DefroAirCard extends HTMLElement {
     return this._state(key) === "on";
   }
 
-  // --- akcje -------------------------------------------------------------
 
   _call(domain, service, key, data = {}) {
     const id = this._ids[key];
@@ -204,7 +188,6 @@ class DefroAirCard extends HTMLElement {
     else if (action === "toggle-holiday") this._open = this._open === "holiday" ? null : "holiday";
     else if (action === "bypass") this._call("switch", "toggle", "switch.bypass_enabled");
     else if (action === "fireplace")
-      // Palenisko ma stały czas (3 minuty, jak na panelu); ponowne kliknięcie je kończy.
       this._call("number", "set_value", "number.fireplace", {
         value: (this._number("number.fireplace") || 0) > 0 ? 0 : FIREPLACE_SECONDS,
       });
@@ -236,7 +219,6 @@ class DefroAirCard extends HTMLElement {
     this._render(true);
   }
 
-  // --- rysowanie ---------------------------------------------------------
 
   _render(force = false) {
     if (!this._hass) return;
@@ -356,17 +338,7 @@ class DefroAirCard extends HTMLElement {
     const start = (x, y, angle, color) =>
       `<polygon points="0,-20 30,0 0,20" fill="${color}" transform="translate(${x} ${y}) rotate(${angle})"/>`;
 
-    // Praca normalna: oba strumienie stykają się w środku (wymiennik).
-    // Bypass: strumień wywiewany omija wymiennik, więc strzałki się rozchodzą.
-    // Napisy mają stałe kolory z panelu Defro (wywiew i wyrzutnia czerwone,
-    // czerpnia i nawiew niebieskie), a kolor strzałek pokazuje temperaturę.
-    // Kolor strumienia oznacza temperaturę: niebieski to powietrze zimne
-    // (po stronie zewnętrznej), czerwony ciepłe (po stronie domu). W wymienniku
-    // nawiew się ogrzewa (niebieski → czerwony), a wywiew stygnie (czerwony →
-    // niebieski). Przy otwartym bypassie wymiany nie ma, więc kolory są stałe.
-    // Oba strumienie to gładkie łuki jak na panelu Defro: w środku tworzą
-    // dwa zaokrąglone brzuśce „)(”. Ich najbliższe punkty są 28 jednostek od
-    // siebie przy grubości 24, więc między strumieniami zostaje wąska przerwa.
+    // Kolor strzałek: niebieski = zimne, czerwony = ciepłe powietrze.
     const extractPath = "M 430 437 C 474 437 496 414 496 380 C 496 330 410 268 366 226";
     const supplyPath = "M 690 187 C 630 245 524 320 524 380 C 524 414 546 437 588 437";
     const exhaustColor = v.bypass ? RED : BLUE; // koniec strumienia wywiewanego
@@ -375,8 +347,6 @@ class DefroAirCard extends HTMLElement {
     const extractStroke = v.bypass ? RED : "url(#extract)";
     const supplyStroke = v.bypass ? BLUE : "url(#supply)";
 
-    // Przy otwartym bypassie kształt strzałek zostaje ten sam, ale strumień
-    // wywiewany jest przygaszony (nie oddaje ciepła), a pod spodem jest napis.
     const exchanger = v.bypass
       ? `<text class="tag" x="510" y="490" text-anchor="middle">BYPASS</text>`
       : "";
@@ -391,7 +361,6 @@ class DefroAirCard extends HTMLElement {
         : "";
 
     const running = (value) => value !== null && value > 0;
-    // Wentylator na biegu 0 (np. wywiew w trybie palenisko): strumień przygaszony.
     const stopped = (value) => value === 0;
     return `<svg viewBox="0 70 1000 430" role="img" aria-label="Schemat rekuperatora">
       <polygon fill="#9b9b9b" points="430,162 545,96 625,146 625,100 672,100 672,176 812,290 745,290 545,152 478,192"/>
@@ -443,7 +412,6 @@ class DefroAirCard extends HTMLElement {
     const partyOn = (v.party || 0) > 0;
     const hhmm = (minutes) =>
       `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-    // Przycisk z ikoną; pod spodem krótki podpis (np. pozostały czas).
     const control = (action, icon, title, on, caption, open = false, disabled = false) =>
       `<span class="ctl">
          <button class="btn ${on ? "on" : ""} ${open ? "open" : ""}" data-action="${action}"
@@ -456,7 +424,6 @@ class DefroAirCard extends HTMLElement {
     const holidayOn = v.holiday || (v.holidayDays || 0) > 0;
     const fireplaceOn = (v.fireplace || 0) > 0;
 
-    // Wybór biegu: okrągłe przyciski ze znakiem stopu i cyframi 1–3.
     const gear = (g) =>
       `<span class="ctl">
          <button class="btn ${v.targetGear === g ? "on" : ""}" data-action="gear-${g}"
@@ -470,8 +437,6 @@ class DefroAirCard extends HTMLElement {
         ? ""
         : `<span class="sep"></span>${[0, 1, 2, 3].map(gear).join("")}`;
 
-    // Kolejność: party, palenisko, bypass, biegi (stop, 1, 2, 3), a urlop
-    // osobno, dosunięty do prawej krawędzi.
     return `<div class="bottom">
       ${control("toggle-party", "mdi:party-popper", "Party", partyOn, partyOn ? hhmm(v.party) : "",
         v.open === "party", v.party === null)}

@@ -23,15 +23,12 @@ from .device import DefroAir, UpdateReport
 
 _LOGGER = logging.getLogger(__name__)
 
-# Po tylu kolejnych timeoutach uznajemy łącze za martwe i otwieramy je na nowo.
 TIMEOUTS_BEFORE_RECONNECT = 3
 
 type DefroAirConfigEntry = ConfigEntry[DefroAirCoordinator]
 
 
 class DefroAirCoordinator(DataUpdateCoordinator[UpdateReport]):
-    """Odpytuje centralę i przechowuje informację, co udało się odczytać."""
-
     config_entry: DefroAirConfigEntry
 
     def __init__(
@@ -52,7 +49,6 @@ class DefroAirCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Jedno urządzenie, do którego należą wszystkie encje wpisu."""
         extended = self.device.extended
         version = extended.software_version if extended is not None else None
         return DeviceInfo(
@@ -69,8 +65,7 @@ class DefroAirCoordinator(DataUpdateCoordinator[UpdateReport]):
         except ModbusTimeoutError as err:
             self._timeouts += 1
             if self._timeouts >= TIMEOUTS_BEFORE_RECONNECT:
-                # Bramka potrafi trzymać otwarte gniazdo, przez które nic już
-                # nie przechodzi. Rozłączenie wymusza nowe połączenie.
+                # bramka potrafi trzymać martwe gniazdo
                 self._timeouts = 0
                 await self.device.modbus_unit.disconnect()
             raise UpdateFailed(

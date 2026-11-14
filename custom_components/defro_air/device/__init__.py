@@ -1,8 +1,4 @@
-"""Rekuperator Defro Air po Modbus, bez zależności od Home Assistanta.
-
-Pakiet dostaje gotowy ``ModbusUnit`` i tylko czyta oraz zapisuje rejestry.
-Połączenie otwiera i zamyka ten, kto go używa.
-"""
+"""Model rekuperatora Defro Air, niezależny od Home Assistanta."""
 
 from __future__ import annotations
 
@@ -48,31 +44,23 @@ EXTENDED = "extended"
 
 
 class DefroAir(Device):
-    """Centrala wentylacyjna Defro Air ze sterownikiem ST-340 v2."""
-
     def __init__(self, unit: ModbusUnit) -> None:
         super().__init__(unit)
         self.core = Core(unit)
         self.extended: Extended | None = None
 
     async def _async_setup(self) -> None:
-        """Sprawdź raz, czy program sterownika obsługuje rejestry 156–174."""
         self.extended = await read_optional(Extended(self.modbus_unit))
 
     @property
     def components(self) -> tuple[str, ...]:
-        """Podsystemy, które to urządzenie obsługuje (znane po pierwszym odczycie)."""
         return (CORE, EXTENDED) if self.extended is not None else (CORE,)
 
     async def async_update(self) -> UpdateReport:
-        """Odczytaj wszystkie obsługiwane rejestry."""
         return await self.async_poll((CORE, EXTENDED))
 
     async def async_read_all_raw(self) -> dict[str, dict[int, int | bool]]:
-        """Surowe wartości wszystkich obsługiwanych rejestrów (do diagnostyki)."""
         return await self.async_read_raw((CORE, EXTENDED))
-
-    # --- wartości pochodne -------------------------------------------------
 
     @property
     def outdoor_temperature(self) -> float | None:
@@ -104,7 +92,6 @@ class DefroAir(Device):
 
     @property
     def efficiency(self) -> float | None:
-        """Sprawność odzysku ciepła w procentach."""
         return heat_recovery_efficiency(
             self.outdoor_temperature,
             self.supply_temperature,
@@ -114,7 +101,6 @@ class DefroAir(Device):
 
     @property
     def recovered_power(self) -> float | None:
-        """Moc odzyskiwana przez wymiennik w watach."""
         return recovered_power(
             self.outdoor_temperature,
             self.supply_temperature,
@@ -124,23 +110,18 @@ class DefroAir(Device):
 
     @property
     def has_error(self) -> bool | None:
-        """Czy sterownik zgłasza jakikolwiek błąd."""
         errors = self.core.errors
         return None if errors is None else int(errors) != 0
 
     @property
     def error_keys(self) -> list[str] | None:
-        """Nazwy aktywnych błędów."""
         return error_keys(self.core.errors)
 
     @property
     def clock(self) -> datetime | None:
-        """Data i godzina ustawione w sterowniku (czas lokalny, bez strefy)."""
+        """Czas lokalny sterownika, bez strefy."""
         return decode_clock(self.core.clock_date, self.core.clock_time)
 
-    # --- zapisy ------------------------------------------------------------
-
     async def async_set_clock(self, now: datetime) -> None:
-        """Ustaw datę i godzinę sterownika (podaj czas lokalny)."""
         await self.core.write("clock_date", encode_date(now.date()))
         await self.core.write("clock_time", encode_time(now.time()))

@@ -43,11 +43,9 @@ async def _async_register_card(hass: HomeAssistant) -> None:
         [StaticPathConfig(CARD_URL, str(CARD_PATH), cache_headers=False)]
     )
     integration = await async_get_integration(hass, DOMAIN)
-    # Wersja w adresie wymusza pobranie nowego pliku po aktualizacji integracji.
     url = f"{CARD_URL}?v={integration.version}"
     if not await _async_register_resource(hass, url):
-        # Zasoby dashboardu trzymane w YAML-u: nie możemy ich zmieniać, więc
-        # ładujemy kartę ze stroną startową (wymaga odświeżenia przeglądarki).
+        # zasoby w YAML-u
         add_extra_js_url(hass, url)
 
 
@@ -61,14 +59,9 @@ def _storage_resources(hass: HomeAssistant) -> ResourceStorageCollection | None:
 
 
 async def _async_register_resource(hass: HomeAssistant, url: str) -> bool:
-    """Dodaj kartę do zasobów dashboardu albo zaktualizuj jej adres.
-
-    Zasoby frontend pobiera przy każdym otwarciu dashboardu, więc karta działa
-    od razu, bez czyszczenia pamięci podręcznej przeglądarki.
-    """
     if (resources := _storage_resources(hass)) is None:
         return False
-    await resources.async_get_info()  # wczytuje zasoby z dysku, jeśli trzeba
+    await resources.async_get_info()
     for item in resources.async_items():
         if item["url"].split("?")[0] != CARD_URL:
             continue
@@ -94,11 +87,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: DefroAirConfigEntry) ->
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DefroAirConfigEntry) -> bool:
-    """Skonfiguruj centralę z wpisu konfiguracji."""
     await _async_register_card(hass)
 
-    # Połączenie należy do integracji modbus: jest współdzielone z innymi
-    # integracjami na tej samej bramce i zamykane, gdy zwolni je ostatni wpis.
+    # Połączenie jest współdzielone przez integrację modbus.
     unit = async_get_unit(
         hass,
         entry,
@@ -115,5 +106,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: DefroAirConfigEntry) -> 
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: DefroAirConfigEntry) -> bool:
-    """Wyładuj wpis konfiguracji."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

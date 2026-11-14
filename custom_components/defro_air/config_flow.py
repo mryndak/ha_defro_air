@@ -71,8 +71,6 @@ def _connection_schema(defaults: dict[str, Any]) -> probatio.Schema:
 
 
 class DefroAirConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Konfiguracja integracji z interfejsu użytkownika."""
-
     VERSION = 1
 
     @staticmethod
@@ -103,7 +101,6 @@ class DefroAirConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Zapytaj o adres i sprawdź, czy centrala odpowiada."""
         errors: dict[str, str] = {}
 
         if user_input is not None:

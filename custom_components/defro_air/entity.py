@@ -24,11 +24,7 @@ class DefroAirEntityDescription(EntityDescription):
 
 
 class DefroAirEntity(CoordinatorEntity[DefroAirCoordinator]):
-    """Encja oparta na jednym podsystemie centrali.
-
-    Podsystemy są odczytywane niezależnie, więc encja jest niedostępna wtedy,
-    gdy nie odpowiedział jej własny podsystem.
-    """
+    """Dostępna, gdy odpowiedział jej podsystem rejestrów."""
 
     _attr_has_entity_name = True
     entity_description: DefroAirEntityDescription
@@ -56,7 +52,6 @@ class DefroAirEntity(CoordinatorEntity[DefroAirCoordinator]):
         )
 
     async def _async_write(self, write: Awaitable[None]) -> None:
-        """Wykonaj zapis do centrali i od razu odśwież stan."""
         try:
             await write
         except ValueError as err:
@@ -71,8 +66,7 @@ class DefroAirEntity(CoordinatorEntity[DefroAirCoordinator]):
                 translation_key="write_failed",
                 translation_placeholders={"error": str(err) or type(err).__name__},
             ) from err
-        # Bez async_request_refresh: jego opóźnienie (debounce) sprawia, że po
-        # drugim zapisie z rzędu encja przez kilka sekund pokazuje stary stan.
+        # async_request_refresh z debounce zostawiał stary stan
         await self.coordinator.async_refresh()
 
 

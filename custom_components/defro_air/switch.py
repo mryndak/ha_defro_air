@@ -54,8 +54,6 @@ async def async_setup_entry(
 
 
 class DefroAirSwitch(DefroAirEntity, SwitchEntity):
-    """Przełącznik zapisujący 0 lub 1 do rejestru centrali."""
-
     entity_description: DefroAirSwitchDescription
 
     @property

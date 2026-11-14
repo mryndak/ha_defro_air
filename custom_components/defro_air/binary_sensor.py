@@ -25,8 +25,6 @@ PARALLEL_UPDATES = 0
 class DefroAirBinarySensorDescription(
     BinarySensorEntityDescription, DefroAirEntityDescription
 ):
-    """Opis sensora binarnego."""
-
     value_fn: Callable[[DefroAir], bool | None]
 
 
@@ -66,8 +64,6 @@ async def async_setup_entry(
 
 
 class DefroAirBinarySensor(DefroAirEntity, BinarySensorEntity):
-    """Stan dwuwartościowy odczytywany z centrali."""
-
     entity_description: DefroAirBinarySensorDescription
 
     @property

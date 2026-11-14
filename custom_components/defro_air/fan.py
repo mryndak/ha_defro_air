@@ -1,8 +1,4 @@
-"""Wentylacja jako encja fan: bieg zadany 0–3 (rejestr 157).
-
-Rejestr 157 istnieje tylko w nowszych wersjach programu sterownika, więc na
-module MBP 1.1.4 ta encja nie powstaje.
-"""
+"""Bieg zadany 0–3 (rejestr 157, tylko nowsze wersje programu)."""
 
 from __future__ import annotations
 
@@ -42,8 +38,6 @@ async def async_setup_entry(
 
 
 class DefroAirFan(DefroAirEntity, FanEntity):
-    """Bieg zadany centrali."""
-
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.TURN_ON

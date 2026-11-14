@@ -34,8 +34,6 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class DefroAirSensorDescription(SensorEntityDescription, DefroAirEntityDescription):
-    """Opis sensora."""
-
     value_fn: Callable[[DefroAir], Any]
     attributes_fn: Callable[[DefroAir], dict[str, Any]] | None = None
 
@@ -155,8 +153,6 @@ async def async_setup_entry(
 
 
 class DefroAirSensor(DefroAirEntity, SensorEntity):
-    """Sensor odczytywany z centrali."""
-
     entity_description: DefroAirSensorDescription
 
     @property
