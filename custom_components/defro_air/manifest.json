@@ -10,5 +10,5 @@
   "issue_tracker": "https://github.com/mryndak/ha_defro_air/issues",
   "loggers": ["modbus_connection", "tmodbus"],
   "requirements": [],
-  "version": "0.3.1"
+  "version": "0.3.2"
 }

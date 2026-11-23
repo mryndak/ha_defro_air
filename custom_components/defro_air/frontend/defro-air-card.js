@@ -19,8 +19,8 @@ const STYLE = `
     font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
   .top {
-    display: flex; align-items: center; gap: 14px; min-height: 28px;
-    padding: 10px 16px; background: rgba(0, 0, 0, .45);
+    display: flex; align-items: center; gap: 14px;
+    padding: 5px 16px; background: rgba(0, 0, 0, .45);
   }
   .title { font-size: 1.05em; letter-spacing: .04em; white-space: nowrap; }
   .icons { display: flex; gap: 12px; flex: 1; flex-wrap: wrap; }
@@ -46,9 +46,9 @@ const STYLE = `
   .digit { font-size: calc(var(--btn, 54px) * .52); font-weight: 600; line-height: 1; }
   .sep { width: 1px; align-self: stretch; margin: 4px 2px 22px; background: #555; }
   .cap { font-size: .85em; color: #ddd; min-height: 1.2em; white-space: nowrap; }
-  .eff { text-align: center; white-space: nowrap; line-height: 1.15; }
-  .eff .name { color: #aaa; font-size: .8em; }
-  .eff .val { font-size: 1.1em; }
+  .eff { text-align: center; white-space: nowrap; line-height: 1.1; }
+  .eff .name { color: #aaa; font-size: .72em; line-height: 1.05; }
+  .eff .val { font-size: 1em; }
   svg { display: block; width: 100%; height: auto; }
   .label { font-size: 34px; font-weight: 600; }
   .temp { font-size: 40px; font-weight: 300; fill: #fff; }
@@ -58,7 +58,7 @@ const STYLE = `
   .tag { font-size: 22px; font-weight: 700; letter-spacing: .12em; fill: #ffb300; }
   .bottom {
     display: flex; flex-wrap: nowrap; gap: var(--gap, 10px);
-    padding: 4px 16px 12px; align-items: flex-start;
+    padding: 2px 16px 4px; align-items: flex-start;
   }
   .pill {
     border: 0; border-radius: 999px; padding: 6px 16px; cursor: pointer;
